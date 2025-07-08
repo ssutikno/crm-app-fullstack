@@ -1,0 +1,29 @@
+/* ... keep the existing styles ... */
+#wrapper {
+  overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+  min-height: 100vh;
+  width: 250px;
+  margin-left: -250px; /* Hide by default */
+  transition: margin 0.25s ease-out; /* Add smooth transition */
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: 0; /* Show sidebar when toggled */
+}
+
+#page-content-wrapper {
+  min-width: 100vw;
+}
+
+#wrapper.toggled #page-content-wrapper {
+  min-width: calc(100vw - 250px); /* Adjust content width when sidebar is open */
+}
+
+#sidebar-wrapper .active {
+  background-color: #0d6efd !important;
+  border-right: 5px solid #ffc107;
+  color: white !important;
+}

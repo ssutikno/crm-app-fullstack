@@ -11,14 +11,15 @@ const canManageProducts = (req, res, next) => {
     next();
 };
 
-// GET all products with optional filtering and searching
+// GET all products with filtering, searching, sorting, and pagination
 router.get('/', auth, async (req, res) => {
     try {
-        const { category, search } = req.query;
-        let baseQuery = 'SELECT * FROM products';
-        const queryParams = [];
+        const { category, search, sortBy, direction, page, limit } = req.query;
+        
+        let queryParams = [];
         let whereClauses = [];
 
+        // Build WHERE clause for filtering and searching
         if (category) {
             queryParams.push(category);
             whereClauses.push(`category = $${queryParams.length}`);
@@ -27,15 +28,39 @@ router.get('/', auth, async (req, res) => {
             queryParams.push(`%${search}%`);
             whereClauses.push(`(name ILIKE $${queryParams.length} OR sku ILIKE $${queryParams.length})`);
         }
+        const whereCondition = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
-        if (whereClauses.length > 0) {
-            baseQuery += ' WHERE ' + whereClauses.join(' AND ');
+        // First query to get the total count of filtered items
+        const totalQuery = `SELECT COUNT(*) FROM products ${whereCondition}`;
+        const totalResult = await db.query(totalQuery, queryParams);
+        const totalCount = parseInt(totalResult.rows[0].count, 10);
+
+        // Second query to get the paginated, sorted data
+        let dataQuery = `SELECT * FROM products ${whereCondition}`;
+        
+        // Sorting
+        const validSortColumns = ['sku', 'name', 'category', 'price', 'status'];
+        if (sortBy && validSortColumns.includes(sortBy)) {
+            const sortDirection = direction === 'desc' ? 'DESC' : 'ASC';
+            dataQuery += ` ORDER BY ${sortBy} ${sortDirection}`;
+        } else {
+            dataQuery += ' ORDER BY name ASC';
         }
 
-        baseQuery += ' ORDER BY name ASC';
+        // Pagination
+        const pageLimit = parseInt(limit, 10) || 10;
+        const currentPage = parseInt(page, 10) || 1;
+        const offset = (currentPage - 1) * pageLimit;
+        queryParams.push(pageLimit, offset);
+        dataQuery += ` LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}`;
+
+        const { rows } = await db.query(dataQuery, queryParams);
         
-        const { rows } = await db.query(baseQuery, queryParams);
-        res.json(rows);
+        res.json({
+            products: rows,
+            totalCount: totalCount
+        });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

@@ -77,7 +77,8 @@ CREATE TABLE leads (
     email VARCHAR(100),
     phone VARCHAR(50),
     description TEXT, -- ADDED a field for notes or description
-    converted_customer_id INT REFERENCES customers(id) NULL
+    converted_customer_id INT REFERENCES customers(id) NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE deal_stages (

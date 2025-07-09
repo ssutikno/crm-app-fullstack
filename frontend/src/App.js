@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import LeadsPage from './pages/LeadsPage';
 import PipelinePage from './pages/PipelinePage';
 import ProductsPage from './pages/ProductsPage';
+import ProductRequestsPage from './pages/ProductRequestsPage';
 import CustomersPage from './pages/CustomersPage';
 import CustomerDetailPage from './pages/CustomerDetailPage';
 import QuotesListPage from './pages/QuotesListPage';
@@ -36,7 +37,7 @@ function App() {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="analytics" element={<h2>Analytics</h2>} />
-          <Route path="product-requests" element={<h2>Product Requests</h2>} />
+          <Route path="product-requests" element={<ProductRequestsPage />} />
         </Route>
       </Route>
     </Routes>

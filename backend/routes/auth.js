@@ -55,7 +55,7 @@ router.post('/login', async (req, res) => {
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '5h' },
+            { expiresIn: '30m' },
             (err, token) => {
                 if (err) throw err;
                  console.log(`LOGIN SUCCESS: Token generated for user ID ${user.id}`);

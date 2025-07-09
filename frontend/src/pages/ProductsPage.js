@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ProductFormModal from '../components/ProductFormModal';
-import ProductDetailModal from '../components/ProductDetailModal'; // ADD THIS IMPORT
+import ProductDetailModal from '../components/ProductDetailModal';
 
 function ProductsPage() {
     const { user } = useAuth();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // State for all table controls
     const [searchTerm, setSearchTerm] = useState('');
     const [category, setCategory] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalProducts, setTotalProducts] = useState(0);
 
-    // A single state to handle which modal is open ('create', 'edit', 'view')
+    // State for modals
     const [modalMode, setModalMode] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     
@@ -24,9 +30,17 @@ function ProductsPage() {
             try {
                 const apiUrl = process.env.REACT_APP_API_URL;
                 const response = await axios.get(`${apiUrl}/api/products`, {
-                    params: { search: searchTerm, category: category }
+                    params: { 
+                        search: searchTerm, 
+                        category: category,
+                        sortBy: sortConfig.key,
+                        direction: sortConfig.direction,
+                        page: currentPage,
+                        limit: itemsPerPage
+                    }
                 });
-                setProducts(response.data);
+                setProducts(response.data.products);
+                setTotalProducts(response.data.totalCount);
             } catch (error) {
                 console.error("Failed to fetch products:", error);
             } finally {
@@ -34,12 +48,13 @@ function ProductsPage() {
             }
         };
 
+        // Debounce fetching to avoid excessive API calls
         const timerId = setTimeout(() => {
             fetchProducts();
         }, 500);
 
         return () => clearTimeout(timerId);
-    }, [searchTerm, category, refetchTrigger]);
+    }, [searchTerm, category, sortConfig, currentPage, itemsPerPage, refetchTrigger]);
 
     const handleSave = async (formData) => {
         const apiUrl = process.env.REACT_APP_API_URL;
@@ -49,7 +64,7 @@ function ProductsPage() {
             } else if (modalMode === 'edit') {
                 await axios.put(`${apiUrl}/api/products/${selectedProduct.id}`, formData);
             }
-            setRefetchTrigger(c => c + 1);
+            setRefetchTrigger(c => c + 1); // Trigger a refetch
         } catch (error) {
             alert(error.response?.data?.msg || 'Failed to save product.');
         } finally {
@@ -63,13 +78,23 @@ function ProductsPage() {
             try {
                 const apiUrl = process.env.REACT_APP_API_URL;
                 await axios.delete(`${apiUrl}/api/products/${productId}`);
-                setRefetchTrigger(c => c + 1);
+                setRefetchTrigger(c => c + 1); // Trigger a refetch
             } catch (error) {
                 alert(error.response?.data?.msg || 'Failed to delete product.');
             }
         }
     };
 
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+        setCurrentPage(1);
+    };
+
+    const totalPages = Math.ceil(totalProducts / itemsPerPage);
     const canManageProducts = user && ['product_manager', 'supervisor'].includes(user.role);
 
     return (
@@ -101,11 +126,19 @@ function ProductsPage() {
             </div>
 
             <div className="card shadow-sm">
+                <div className="card-header"><h5 className="mb-0">Product List</h5></div>
                 <div className="card-body">
                     {loading ? <p>Loading products...</p> : (
                         <table className="table table-hover">
                             <thead className="table-light">
-                                <tr><th>SKU</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+                                <tr>
+                                    <th onClick={() => requestSort('sku')} style={{cursor: 'pointer'}}>SKU ▾</th>
+                                    <th onClick={() => requestSort('name')} style={{cursor: 'pointer'}}>Name ▾</th>
+                                    <th onClick={() => requestSort('category')} style={{cursor: 'pointer'}}>Category ▾</th>
+                                    <th onClick={() => requestSort('price')} style={{cursor: 'pointer'}}>Price ▾</th>
+                                    <th onClick={() => requestSort('status')} style={{cursor: 'pointer'}}>Status ▾</th>
+                                    <th>Actions</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 {products.map(product => (
@@ -138,7 +171,21 @@ function ProductsPage() {
                 </div>
             </div>
 
-            {/* Render create/edit form modal */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+                <nav>
+                    <ul className="pagination mb-0">
+                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}><button className="page-link" onClick={() => setCurrentPage(p => p - 1)}>Previous</button></li>
+                        <li className={`page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}`}><button className="page-link" onClick={() => setCurrentPage(p => p + 1)}>Next</button></li>
+                    </ul>
+                </nav>
+                <div className="d-flex align-items-center">
+                    <span className="me-2 text-muted">Page {currentPage} of {totalPages} ({totalProducts} items)</span>
+                    <select className="form-select w-auto" value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+                        <option value="10">10 per page</option><option value="25">25 per page</option><option value="50">50 per page</option>
+                    </select>
+                </div>
+            </div>
+
             {(modalMode === 'edit' || modalMode === 'create') && (
                 <ProductFormModal 
                     mode={modalMode} 
@@ -148,7 +195,6 @@ function ProductsPage() {
                 />
             )}
 
-            {/* Render view detail modal */}
             {modalMode === 'view' && (
                 <ProductDetailModal
                     product={selectedProduct}

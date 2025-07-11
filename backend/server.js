@@ -23,6 +23,7 @@ const tasksRoutes = require('./routes/tasks');
 const usersRoutes = require('./routes/users');
 const productRequestsRoutes = require('./routes/productRequests');
 const profileRoutes = require('./routes/profile'); // Import the new profile route
+const analyticsRoutes = require('./routes/analytics');
 
 app.use('/api/leads', leadsRoutes);
 app.use('/api/roles', rolesRoutes);
@@ -37,6 +38,7 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/product-requests', productRequestsRoutes);
 app.use('/api/profile', profileRoutes); // Use the new profile route
+app.use('/api/analytics', analyticsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -4,4 +4,4 @@ services:
   db:
     volumes:
       # This line is ADDED only in development to seed sample data
-      # - ./backend/db/03_development_seed.sql:/docker-entrypoint-initdb.d/03_development_seed.sql
+      - ./backend/db/03_development_seed.sql:/docker-entrypoint-initdb.d/03_development_seed.sql

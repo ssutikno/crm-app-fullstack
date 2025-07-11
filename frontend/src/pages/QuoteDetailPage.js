@@ -6,7 +6,6 @@ function QuotesListPage() {
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // State for table controls
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
@@ -19,7 +18,13 @@ function QuotesListPage() {
             try {
                 const apiUrl = process.env.REACT_APP_API_URL;
                 const response = await axios.get(`${apiUrl}/api/quotes`, {
-                    params: { search: searchTerm, sortBy: sortConfig.key, direction: sortConfig.direction, page: currentPage, limit: itemsPerPage }
+                    params: { 
+                        search: searchTerm, 
+                        sortBy: sortConfig.key, 
+                        direction: sortConfig.direction, 
+                        page: currentPage, 
+                        limit: itemsPerPage 
+                    }
                 });
                 setQuotes(response.data.quotes);
                 setTotalQuotes(response.data.totalCount);
@@ -35,8 +40,16 @@ function QuotesListPage() {
 
     const requestSort = (key) => {
         let direction = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') { direction = 'desc'; }
+        if (sortConfig.key === key && sortConfig.direction === 'asc') { 
+            direction = 'desc'; 
+        }
         setSortConfig({ key, direction });
+    };
+
+    // Helper function to format currency
+    const formatCurrency = (value) => {
+        // Uses Indonesian locale for dot-as-thousand-separator formatting
+        return `Rp. ${Number(value).toLocaleString('id-ID')}`;
     };
 
     const totalPages = Math.ceil(totalQuotes / itemsPerPage);
@@ -61,7 +74,8 @@ function QuotesListPage() {
                                 <th onClick={() => requestSort('deal_name')} style={{ cursor: 'pointer' }}>Deal Name ▾</th>
                                 <th onClick={() => requestSort('customer_name')} style={{ cursor: 'pointer' }}>Customer ▾</th>
                                 <th onClick={() => requestSort('created_at')} style={{ cursor: 'pointer' }}>Date ▾</th>
-                                <th onClick={() => requestSort('total')} style={{ cursor: 'pointer' }}>Total ▾</th>
+                                {/* UPDATED: Added text-end for right alignment */}
+                                <th onClick={() => requestSort('total')} style={{ cursor: 'pointer' }} className="text-end">Total ▾</th>
                                 <th onClick={() => requestSort('status')} style={{ cursor: 'pointer' }}>Status ▾</th>
                                 <th>Actions</th>
                             </tr>
@@ -69,8 +83,12 @@ function QuotesListPage() {
                         <tbody>
                             {quotes.map(quote => (
                                 <tr key={quote.id}>
-                                    <td>{quote.id}</td><td>{quote.deal_name}</td><td>{quote.customer_name}</td>
-                                    <td>{new Date(quote.created_at).toLocaleDateString()}</td><td>${quote.total.toLocaleString()}</td>
+                                    <td>{quote.id}</td>
+                                    <td>{quote.deal_name}</td>
+                                    <td>{quote.customer_name}</td>
+                                    <td>{new Date(quote.created_at).toLocaleDateString()}</td>
+                                    {/* UPDATED: Applied currency formatting and right alignment */}
+                                    <td className="text-end">{formatCurrency(quote.total)}</td>
                                     <td><span className="badge bg-info">{quote.status}</span></td>
                                     <td><Link to={`/quotes/${quote.id}`} className="btn btn-sm btn-outline-secondary">View Details</Link></td>
                                 </tr>

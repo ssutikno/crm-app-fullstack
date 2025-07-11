@@ -17,6 +17,7 @@ import TasksPage from './pages/TasksPage'; // This import should now work
 import UserManagementPage from './pages/UserManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage'; // Import the new Analytics page
+import QuoteDetailPage from './pages/QuoteDetailPage';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="customers/:id" element={<CustomerDetailPage />} />
           <Route path="quotes" element={<QuotesListPage />} />
           <Route path="quotes/new" element={<NewQuotePage />} />
+          <Route path="quotes/:id" element={<QuoteDetailPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="users" element={<UserManagementPage />} />
           <Route path="profile" element={<ProfilePage />} />

@@ -30,12 +30,13 @@ router.post('/login', async (req, res) => {
     try {
         const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = rows[0];
-
+        console.log(`LOGIN ATTEMPT: User ID ${user.id}, Setup Complete: ${user.is_setup_complete}`);
         if (!user) {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
         // NEW: Check if the user needs to set their password
+        
         if (!user.is_setup_complete) {
             return res.json({ setupRequired: true, userId: user.id });
         }

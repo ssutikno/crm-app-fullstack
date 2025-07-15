@@ -79,8 +79,9 @@ This application is fully containerized, making the setup process straightforwar
 Open your terminal and clone the project:
 
 ```bash
-git clone https://github.com/your-username/your-crm-repo.git
-cd your-crm-repo
+git clone https://github.com/ssutikno/crm-app-fullstack
+cd crm-app-fullstack
+
 ```
 
 **2. Create the Environment File**

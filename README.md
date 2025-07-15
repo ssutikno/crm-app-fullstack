@@ -116,6 +116,12 @@ On the first run, this command will build all the images and create the database
 Open your web browser and navigate to:
 **`http://localhost:3000`**
 
+**For Network Access from Other Computers:**
+To access the application from other computers on your network, use:
+**`http://192.168.31.32:3000`**
+
+Note: Replace `192.168.31.32` with your server's actual IP address if it changes. You can update the `SERVER_IP` value in the `.env` file and restart the containers with `docker-compose down && docker-compose up --build`.
+
 -----
 
 ## Default Login Credentials
@@ -145,3 +151,47 @@ Product Manager:
 Email: peter.pan@example.com
 
 Password: password123
+
+-----
+
+## Network Access Configuration
+
+### Accessing from Other Computers
+
+By default, the application is configured to allow access from other computers on your network. The configuration automatically uses your server's IP address (`192.168.31.32` in the current setup).
+
+### Updating Network Configuration
+
+If your server's IP address changes, follow these steps:
+
+1. **Find Your Server's IP Address:**
+   ```bash
+   ipconfig
+   ```
+   Look for your main network adapter's IPv4 address.
+
+2. **Update the Configuration:**
+   Edit the `.env` file and change the `SERVER_IP` value:
+   ```env
+   SERVER_IP=your_new_ip_address
+   ```
+
+3. **Restart the Application:**
+   ```bash
+   docker-compose down
+   docker-compose up --build
+   ```
+
+### Firewall Considerations
+
+Make sure your Windows Firewall allows connections on ports 3000 (frontend) and 5000 (backend). Docker Desktop usually handles this automatically, but you may need to allow these ports through your firewall if you encounter connection issues.
+
+### Network Requirements
+
+- **Frontend Port**: 3000
+- **Backend Port**: 5000  
+- **Database Port**: 5432 (internal access only)
+
+Other computers on your network can access the application using:
+- **Frontend**: `http://[SERVER_IP]:3000`
+- **Backend API**: `http://[SERVER_IP]:5000`

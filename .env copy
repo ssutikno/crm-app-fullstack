@@ -1,0 +1,15 @@
+# PostgreSQL Database Connection
+DB_USER=crmuser
+DB_HOST=db
+DB_DATABASE=crmdb
+DB_PASSWORD=mypassword
+DB_PORT=5432
+
+# Server Port
+PORT=5000
+
+# Server IP for network access (change this to your computer's IP address)
+SERVER_IP=192.168.31.32
+
+# Secret for JSON Web Tokens (JWT) - MUST HAVE A VALUE
+JWT_SECRET=SECRET_CRM_KEY

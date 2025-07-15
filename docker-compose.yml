@@ -27,7 +27,7 @@ services:
     env_file: ./.env
     # THIS IS THE FIX: Explicitly pass the JWT_SECRET to the container's environment
     ports:
-      - "${PORT}:${PORT}"
+      - "0.0.0.0:${PORT}:${PORT}"
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -47,13 +47,14 @@ services:
     build: ./frontend
     container_name: crm_frontend
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - REACT_APP_API_URL=http://localhost:5000
-      - WDS_SOCKET_PORT=3000    
+      - REACT_APP_API_URL=http://${SERVER_IP}:${PORT}
+      - WDS_SOCKET_PORT=0
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
 

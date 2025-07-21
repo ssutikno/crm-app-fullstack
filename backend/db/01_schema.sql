@@ -31,13 +31,15 @@ CREATE TABLE role_permissions (
 CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
     industry VARCHAR(100),
     owner_id INT REFERENCES users(id),
     address TEXT,
     city VARCHAR(100),
     country VARCHAR(100),
     website VARCHAR(255),
-    notes TEXT
+    notes TEXT,
+    CONSTRAINT unique_customer_name UNIQUE (name)
 );
 
 CREATE TABLE contacts (

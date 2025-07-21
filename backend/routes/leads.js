@@ -49,8 +49,12 @@ router.post('/', auth, async (req, res) => {
         );
         res.status(201).json(rows[0]);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Error saving new lead:', err.message);
+        if (err.code === '23505') { // unique_violation
+            res.status(400).json({ error: 'Duplicate entry: a lead with this unique field already exists.' });
+        } else {
+            res.status(500).json({ error: 'Server error: ' + err.message });
+        }
     }
 });
 
@@ -86,42 +90,60 @@ router.post('/:id/convert', auth, async (req, res) => {
     const { id } = req.params;
     const { dealName, dealValue } = req.body;
     const client = await db.getClient();
-    
     try {
         await client.query('BEGIN');
-        
         // 1. Get lead info
         const leadRes = await client.query('SELECT * FROM leads WHERE id = $1', [id]);
         if (leadRes.rows.length === 0) {
             throw new Error('Lead not found');
         }
         const lead = leadRes.rows[0];
-
         if (lead.status === 'Converted') {
             throw new Error('Lead has already been converted');
         }
 
-        // 2. Create a new Customer from the lead
-        const customerQuery = 'INSERT INTO customers (name, industry, owner_id) VALUES ($1, $2, $3) RETURNING id';
-        const customerRes = await client.query(customerQuery, [lead.company, '', lead.owner_id]);
-        const newCustomerId = customerRes.rows[0].id;
+        // 2. Check for existing customer by name or email
+        let customerId = null;
+        let customerCheckQuery = 'SELECT id FROM customers WHERE name = $1';
+        let customerCheckParams = [lead.company];
+        if (lead.email) {
+            customerCheckQuery += ' OR email = $2';
+            customerCheckParams.push(lead.email);
+        }
+        const existingCustomer = await client.query(customerCheckQuery, customerCheckParams);
+        if (existingCustomer.rows.length > 0) {
+            customerId = existingCustomer.rows[0].id;
+        } else {
+            // Insert new customer
+            const customerInsertQuery = lead.email
+                ? 'INSERT INTO customers (name, email, industry, owner_id) VALUES ($1, $2, $3, $4) RETURNING id'
+                : 'INSERT INTO customers (name, industry, owner_id) VALUES ($1, $2, $3) RETURNING id';
+            const customerInsertParams = lead.email
+                ? [lead.company, lead.email, '', lead.owner_id]
+                : [lead.company, '', lead.owner_id];
+            const customerRes = await client.query(customerInsertQuery, customerInsertParams);
+            customerId = customerRes.rows[0].id;
+        }
 
-        // 3. Create a new Deal from the lead, linked to the new customer
+        // 3. Create a new Deal from the lead, linked to the customer
         const dealQuery = 'INSERT INTO deals (name, value, close_date, customer_id, owner_id, stage_id) VALUES ($1, $2, $3, $4, $5, $6)';
         const closeDate = new Date();
         closeDate.setDate(closeDate.getDate() + 30); // Set close date 30 days out
-        await client.query(dealQuery, [dealName, dealValue, closeDate, newCustomerId, lead.owner_id, 1]); // Stage 1 = 'new'
+        await client.query(dealQuery, [dealName, dealValue, closeDate, customerId, lead.owner_id, 1]); // Stage 1 = 'new'
 
         // 4. Update the lead's status to 'Converted'
-        await client.query("UPDATE leads SET status = 'Converted', converted_customer_id = $1 WHERE id = $2", [newCustomerId, id]);
+        await client.query("UPDATE leads SET status = 'Converted', converted_customer_id = $1 WHERE id = $2", [customerId, id]);
 
         await client.query('COMMIT');
-        res.json({ msg: 'Lead converted successfully', customerId: newCustomerId });
-
+        res.json({ msg: 'Lead converted successfully', customerId });
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Error converting lead:', err.message);
+        if (err.code === '23505') { // unique_violation
+            res.status(400).json({ error: 'Duplicate entry: a record with this unique field already exists.' });
+        } else {
+            res.status(500).json({ error: 'Server error: ' + err.message });
+        }
     } finally {
         client.release();
     }

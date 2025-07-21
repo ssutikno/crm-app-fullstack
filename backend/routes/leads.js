@@ -120,6 +120,9 @@ router.post('/:id/convert', auth, async (req, res) => {
         const existingCustomer = await client.query(customerCheckQuery, customerCheckParams);
         if (existingCustomer.rows.length > 0) {
             customerId = existingCustomer.rows[0].id;
+            // Add a contact for this customer using lead's info
+            const contactInsertQuery = 'INSERT INTO contacts (customer_id, name, email, phone) VALUES ($1, $2, $3, $4)';
+            await client.query(contactInsertQuery, [customerId, lead.name, lead.email, lead.phone]);
         } else {
             // Insert new customer
             const customerInsertQuery = lead.email
@@ -130,6 +133,9 @@ router.post('/:id/convert', auth, async (req, res) => {
                 : [lead.company, '', lead.owner_id];
             const customerRes = await client.query(customerInsertQuery, customerInsertParams);
             customerId = customerRes.rows[0].id;
+            // Add a contact for the new customer as well
+            const contactInsertQuery = 'INSERT INTO contacts (customer_id, name, email, phone) VALUES ($1, $2, $3, $4)';
+            await client.query(contactInsertQuery, [customerId, lead.name, lead.email, lead.phone]);
         }
 
         // 3. Create a new Deal from the lead, linked to the customer

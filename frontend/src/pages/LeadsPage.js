@@ -47,7 +47,8 @@ function LeadsPage() {
             }
             fetchLeads(); // Refresh the list
         } catch (error) {
-            alert('Failed to save lead.');
+            const msg = error.response?.data?.error || error.response?.data?.msg || 'Failed to save lead.';
+            alert(msg);
         } finally {
             setModalMode(null);
         }
@@ -78,7 +79,8 @@ function LeadsPage() {
             alert('Lead converted successfully!');
             fetchLeads(); // Refresh the list to show the "Converted" status
         } catch (error) {
-            alert(error.response?.data?.msg || 'Failed to convert lead.');
+            const msg = error.response?.data?.error || error.response?.data?.msg || 'Failed to convert lead.';
+            alert(msg);
         }
     };
 

@@ -1,4 +1,76 @@
------
+
+## Continuous Integration & Deployment (CI/CD)
+
+This project supports simple CI/CD for local deployment using GitHub Actions and a local deployment script.
+
+### 1. GitHub Actions (CI)
+
+The repository includes a sample GitHub Actions workflow (`.github/workflows/ci.yml`) that runs tests and builds your Docker images on every push or pull request to the `main` branch.
+
+**Sample Workflow:**
+
+```yaml
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+      # Add your backend/frontend test commands here
+      # - name: Run backend tests
+      #   run: |
+      #     cd backend
+      #     npm test
+```
+
+### 2. Local Deployment Script (CD)
+
+To deploy the latest code to your local server, use the provided `deploy.sh` script in the project root:
+
+```bash
+./deploy.sh
+```
+
+This script will:
+- Pull the latest code from the `main` branch
+- Stop running Docker containers
+- Build and start the containers in the background
+
+**Make the script executable (first time only):**
+
+```bash
+chmod +x deploy.sh
+```
+
+You can run this script manually after each push, or automate it further with a scheduled task or remote trigger.
+
+---
 
 # Full-Stack CRM Application
 
@@ -89,9 +161,9 @@ Create a new file named `.env` in the root directory of the project. Copy and pa
 
 ```env
 # PostgreSQL Database Credentials
-DB_USER=crm_user
-DB_PASSWORD=your_secure_password
-DB_DATABASE=crm_db
+DB_USER=crmuser
+DB_PASSWORD=mypassword
+DB_DATABASE=crmdb
 DB_HOST=db
 DB_PORT=5432
 
@@ -99,7 +171,7 @@ DB_PORT=5432
 PORT=5000
 
 # JSON Web Token Secret
-JWT_SECRET=your_super_secret_key_that_is_long_and_random
+JWT_SECRET=SECRET_CRM_KEY
 ```
 
 ### 3\. Running the Application

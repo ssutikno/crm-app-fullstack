@@ -67,10 +67,17 @@ router.put('/:id', auth, async (req, res) => {
             'UPDATE leads SET name=$1, company=$2, email=$3, phone=$4, status=$5, source=$6, score=$7, description=$8 WHERE id=$9 RETURNING *',
             [name, company, email, phone, status, source, score, description, id]
         );
+        if (!rows[0]) {
+            return res.status(404).json({ error: 'Lead not found or no changes made.' });
+        }
         res.json(rows[0]);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Error updating lead:', err.message);
+        if (err.code === '23505') { // unique_violation
+            res.status(400).json({ error: 'Duplicate entry: a lead with this unique field already exists.' });
+        } else {
+            res.status(500).json({ error: 'Server error: ' + err.message });
+        }
     }
 });
 

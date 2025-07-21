@@ -11,9 +11,9 @@ echo "[deploy.sh] Pulling latest code from main branch..."
 git pull origin main
 
 echo "[deploy.sh] Stopping running containers..."
-docker compose down
+docker-compose down
 
 echo "[deploy.sh] Building and starting containers..."
-docker compose up -d --build
+docker-compose up -d --build
 
 echo "[deploy.sh] Deployment complete!"
